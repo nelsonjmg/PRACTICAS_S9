@@ -1,0 +1,33 @@
+\documentclass{article}
+%\usepackage[latin1]{inputenc}
+\usepackage{float}
+
+\begin{document}
+
+\begin{center}\textbf{UNIVERSIDAD DE EL SALVADOR.} \end{center}
+\begin{center}\textbf{FACULTAD MULTIDISCIPLINARIA DE OCCIDENTE.} \end{center}
+\begin{center}\textbf{DEPARTAMENTO DE MATEMATICAS.} \end{center}
+\begin{center}\includegraphics[width=0.4\textwidth]{251.png} \end{center}
+\begin{center} PRACTICA 7. SEMANA 9 \end{center}
+\vspace{0.5cm}
+\begin{center}\textbf{CARRERA:} \end{center}
+\begin{center}\textbf{LICENCIATURA EN ESTADISTICA.} \end{center}
+\vspace{0.5cm}
+\begin{center}\textbf{ASIGNATURA:} \end{center}
+\begin{center}\textbf{ANALISIS ESTADISTICO CON EL PAQUETE R} \end{center}
+\vspace{0.5cm}
+\begin{center}\textbf{DOCENTE:} \end{center}
+\begin{center}\textbf{JAIME ISAAC PEÑA} \end{center}
+\vspace{0.5cm}
+\begin{center}\textbf{PRESENTADO POR:} \end{center}
+\begin{center}\textbf{NELSON DE JESUS MAGAÑA GODINEZ} \end{center}
+\vspace{0.5cm}
+\begin{center}\textbf{FECHA:} \end{center}
+\begin{center}\textbf{20 SEPTIEMBRE DE 2022} \end{center}
+\newpage
+
+<<>>=
+getwd()
+@
+
+\end{document}
