@@ -1353,6 +1353,9 @@ Todos los efectos de este último modelo planteado son significativos y por lo t
 \section{Ejercicios Guiados.}
 \vspace{0.3cm}
 
+\textbf{Ejercicio Guiado 1}
+\vspace{0.3cm}
+
 Se realiza un estudio del contenido de azufre en cinco yacimientos de carbón. Se toman muestras aleatoriamente de cada uno de los yacimientos y se analizan. Los datos del porcentaje de azufre por muestra se indican en la tabla adjunta.
 
 \begin{table}[H]
@@ -1435,7 +1438,141 @@ summary(mod)
 @
 
 En la Tabla ANOVA, el valor del estadístico de contraste de igualdad de medias, F = 8.534 deja a su derecha un p-valor menor que 0.001, menor que el nivel de significación del 5\%, por lo que se rechaza la Hipótesis nula de igualdad de medias. Es decir, existen diferencias significativas en el contenido medio de azufre entre los cinco yacimientos. La pregunta que nos planteamos es si el contenido de azufre es significativamente distinto en los cinco yacimientos o sólo en alguno de ellos. Para responder a esta pregunta utilizamos algún procedimiento de comparaciones múltiples. En el apartado siguiente responderemos a esta cuestión.
+\vspace{0.3cm}
+
+2. Si se rechaza la hipótesis nula que las medias de porcentaje de azufre en los cinco yacimientos es la misma, determinar que medias difieren entre sí utilizando el método de comparaciones múltiples de Tukey.
+
+<<>>=
+mod.tukey <- TukeyHSD(mod, ordered = TRUE)
+mod.tukey
+@
+
+Se comprueba que no se detectan diferencias significativas entre los yacimientos 1, 2 y 3 y entre los yacimientos 2, 4 y 5. Para ello nos fijamos en las Significaciones (mayores que 0.05) o en los límites de los intervalos. Dos medias se declaran iguales si el cero pertenece al intervalo de confianza construido para la diferencia de ellas.\\
+\\
+3. Estudiar las hipótesis de modelo: Homocedasticidad (Homogeneidad de las varianzas por grupo), Independencia y Normalidad.\\
+\\
+\textbf{Hipótesis de Homocedasticidad: Test de Barlett}
+
+<<>>=
+bartlett.test(porcentaje$Azufre, porcentaje$Yacimiento)
+@
+
+La salida muestra el resultado del contraste de Barlett de igualdad de varianzas en todos los grupos. El estadístico de contraste experimental, B= 1.2655, deja a la derecha un p-valor = 0.8672, que nos indica que no se debe rechazar la igualdad entre las varianzas.\\
+\\
+\textbf{Hipótesis de Independencia}: Esta hipótesis la comprobaremos gráficamente mediante la representación de los residuos frente a los valores pronosticados por el modelo.
+
+<<>>=
+layout(matrix(c(1,2,3,4),2,2))
+plot(mod)
+@
+
+En esta salida interpretamos el gráfico que se muestra en la Fila 1, Columna 1. Es decir, el gráfico el que se representan los residuos en el eje de ordenadas y los valores ajustados por el modelo en el eje de abscisas. Este gráfico no muestra ningún aspecto que haga sospechar de la hipótesis de independencia de los residuos.\\
+\\
+La hipótesis de Normalidad la comprobaremos gráficamente y analíticamente\\
+\\
+Gráficamente comprobaremos la normalidad mediante un histograma y el gráfico Q-Q plot\\
+\\
+En primer lugar realizaremos el histograma, para ello
+\\
+En primer lugar calculemos los residuos del modelo
+
+<<>>=
+g = mod$residuals
+g
+@
 
 
+Calculamos la media de los residuos
+
+<<>>=
+m <- mean(g)
+m
+@
+
+Calculamos la desviación típica
+
+<<>>=
+std <- sqrt(var(g))
+std
+@
+
+Representamos el histograma
+
+<<>>=
+hist(g, prob = TRUE, xlab ="Residuos", ylim = c(0, 0.025), main = "F. dens. Normal hist. de residuos")
+@
+
+Y la curma Normal sobre el Histograma
+
+<<>>=
+curve(dnorm(x, mean = m, sd = std), col ="red", lwd =2, add = TRUE, yaxt ="n")
+@
+
+Anteriormete hemos realizado el gráfico Q-Q. Ambos gráficos no muestran desviación importante de la normalidad.\\
+\
+Analíticamente lo vamos a comprobar mediante el contraste de Shapiro-Wilk
+
+<<>>=
+shapiro.test(mod$residuals)
+@
+
+El valor del p-valor (Sig. asintót. (bilateral)) es de 0.6384, por lo tanto no podemos rechazar la hipótesis de normalidad.
+\vspace{0.3cm}
+
+\textbf{Ejercicio Guiado 2}
+\vspace{0.3cm}
+
+Se realiza un estudio sobre el efecto del fotoperiodo y del genotipo en el periodo latente de infección del moho de cebada aislado AB3. Se obtienen cincuenta hojas de cuatro genotipos distintos. Cada grupo es infectado y posteriormente expuesto a diferente fotoperiodo. Los distintos fotoperiodos se trataron como bloques y se obtuvieron los siguientes datos de los totales para los bloques y tratamientos. La respuesta anotada es el número de días hasta la aparición de síntomas visibles.
+
+\begin{table}[H]
+\begin{tabular}{llllll}
+\hline
+\multicolumn{1}{|l|}{}         & \multicolumn{5}{l|}{Fotoperiodo (horas de oscuridad por ciclo de 24 horas)}                                                          \\ \hline
+\multicolumn{1}{|l|}{Genotipo} & \multicolumn{1}{l|}{0}   & \multicolumn{1}{l|}{2}   & \multicolumn{1}{l|}{4}   & \multicolumn{1}{l|}{8}   & \multicolumn{1}{l|}{16}  \\ \hline
+\multicolumn{1}{|l|}{Armelle}  & \multicolumn{1}{l|}{630} & \multicolumn{1}{l|}{610} & \multicolumn{1}{l|}{560} & \multicolumn{1}{l|}{570} & \multicolumn{1}{l|}{590} \\ \hline
+\multicolumn{1}{|l|}{Golden}   & \multicolumn{1}{l|}{640} & \multicolumn{1}{l|}{630} & \multicolumn{1}{l|}{600} & \multicolumn{1}{l|}{620} & \multicolumn{1}{l|}{620} \\ \hline
+\multicolumn{1}{|l|}{Promise}  & \multicolumn{1}{l|}{640} & \multicolumn{1}{l|}{630} & \multicolumn{1}{l|}{650} & \multicolumn{1}{l|}{620} & \multicolumn{1}{l|}{580} \\ \hline
+\multicolumn{1}{|l|}{Emir}     & \multicolumn{1}{l|}{660} & \multicolumn{1}{l|}{660} & \multicolumn{1}{l|}{620} & \multicolumn{1}{l|}{610} & \multicolumn{1}{l|}{630} \\ \hline
+                               &                          &                          &                          &                          &                         
+\end{tabular}
+\end{table}
+
+\begin{enumerate}
+  \item ¿Se puede afirmar que los diferentes genotipos no influyen en el número de días hasta la aparición de la infección? ¿Se puede concluir que los distintos fotoperiodos no afectan al tiempo de aparición de los síntomas de infección del moho?
+  \item En caso de que influyan significativamente alguno de los dos factores, extraer conclusiones utilizando el método de Duncan.
+  \item Estudiar las hipótesis de modelo: Homocedasticidad, Independencia y Normalidad.
+\end{enumerate}
+
+\textbf{Solución:}
+\\
+\begin{enumerate}
+  \item ¿Se puede afirmar que los diferentes genotipos no influyen en el número de días hasta la aparición de la infección? ¿Se puede concluir que los distintos fotoperiodos no afectan al tiempo de aparición de los síntomas de infección del moho?
+\end{enumerate}
+
+En este caso se trata de un diseño en bloques completos aleatorizados. El objetivo del estudio es comparar los cuatro tipos de genotipos, por lo que se trata de un factor con cuatro niveles. Sin embargo, al realizar la medición con los distintos fotoperiodos a los que son expuestos el moho de cebada, es posible que estos influyan sobre el periodo latente de infección del moho de cebada aislado AB3. Por ello, y al no ser directamente motivo de estudio, los fotoperiodos es un factor secundario que recibe el nombre de bloque.\\
+\\
+Este modelo tiene que verificar los siguientes supuestos:\\
+\\
+\begin{enumerate}
+  \item Las 20 observaciones constituyen muestras aleatorias independientes, cada una de tamaño 3, de 20 poblaciones con medias $\mu_ij$, $i=1, 2, 3, 4$  y    $j = 1, 2, 3, 4,5$.
+  \item Cada una de las 20 poblaciones es normal.
+  \item Cada una de las 20 poblaciones tiene la misma varianza.
+  \item Los efectos de los bloques y tratamientos son aditivos; es decir, no existe interacción entre los bloques y tratamientos. Esto significa que si hay diferencias entre dos tratamientos cualesquiera, estas se mantienen en todos los bloques (abetos).
+\end{enumerate}
+
+Los tres primeros supuestos coinciden con los supuestos del modelo unifactorial, con la diferencia de que en el modelo unifactorial se examinaban I poblaciones y en este modelo se examinan IJ. El cuarto supuesto es característico del diseño en bloques. La no interacción entre los bloques y los tratamientos significa que los tratamientos tienen un comportamiento consistente a través de los bloques y que los bloques tienen un comportamiento consistente a través de los tratamientos. Expresado matemáticamente significa que la diferencia de los valores medios para dos tratamientos cualesquiera es la misma en todo un bloque y que la diferencia de los valores medios para dos bloques cualesquiera es la misma para cada tratamiento.\\
+\\
+\begin{itemize}
+  \item Variable respuesta: Número de días hasta la aparición de síntomas visibles.
+  \item Factor: Genotipo que tiene cuatro niveles. Es un factor de efectos fijos ya que viene decidido qué niveles concretos se van a utilizar.
+  \item Bloque: Fotoperiodo que tiene cinco niveles. Es un factor de efectos fijos ya que viene decidido qué niveles concretos se van a utilizar.
+  \item Modelo completo: Los cuatro tratamientos se prueban en cada bloque exactamente una vez.
+\end{itemize}
+
+Tamaño del experimento: Número total de observaciones (20).
+Para realizar este supuesto en R debemos introducir primero los datos de forma correcta. Podemos introducir los datos directamente en R de forma manual o introducirlos previamente en un archivo de texto o Excel y leerlos en R.
+\\
+\\
+En este caso lo hacemos en un archivo de texto:
 \end{document}
 
