@@ -1,5 +1,6 @@
 \documentclass{article}
 %\usepackage[latin1]{inputenc}
+% \usepackage{multirow}
 \usepackage{float}
 
 \begin{document}
@@ -1499,13 +1500,15 @@ std
 Representamos el histograma
 
 <<>>=
-hist(g, prob = TRUE, xlab ="Residuos", ylim = c(0, 0.025), main = "F. dens. Normal hist. de residuos")
+hist(g, prob = TRUE, xlab ="Residuos", ylim = c(0, 0.025),
+     main = "F. dens. Normal hist. de residuos")
 @
 
 Y la curma Normal sobre el Histograma
 
 <<>>=
-curve(dnorm(x, mean = m, sd = std), col ="red", lwd =2, add = TRUE, yaxt ="n")
+curve(dnorm(x, mean = m, sd = std), col ="red", 
+      lwd =2, add = TRUE, yaxt ="n")
 @
 
 Anteriormete hemos realizado el gráfico Q-Q. Ambos gráficos no muestran desviación importante de la normalidad.\\
@@ -1552,7 +1555,7 @@ Se realiza un estudio sobre el efecto del fotoperiodo y del genotipo en el perio
 En este caso se trata de un diseño en bloques completos aleatorizados. El objetivo del estudio es comparar los cuatro tipos de genotipos, por lo que se trata de un factor con cuatro niveles. Sin embargo, al realizar la medición con los distintos fotoperiodos a los que son expuestos el moho de cebada, es posible que estos influyan sobre el periodo latente de infección del moho de cebada aislado AB3. Por ello, y al no ser directamente motivo de estudio, los fotoperiodos es un factor secundario que recibe el nombre de bloque.\\
 \\
 Este modelo tiene que verificar los siguientes supuestos:\\
-\\
+
 \begin{enumerate}
   \item Las 20 observaciones constituyen muestras aleatorias independientes, cada una de tamaño 3, de 20 poblaciones con medias $\mu_ij$, $i=1, 2, 3, 4$  y    $j = 1, 2, 3, 4,5$.
   \item Cada una de las 20 poblaciones es normal.
@@ -1561,7 +1564,7 @@ Este modelo tiene que verificar los siguientes supuestos:\\
 \end{enumerate}
 
 Los tres primeros supuestos coinciden con los supuestos del modelo unifactorial, con la diferencia de que en el modelo unifactorial se examinaban I poblaciones y en este modelo se examinan IJ. El cuarto supuesto es característico del diseño en bloques. La no interacción entre los bloques y los tratamientos significa que los tratamientos tienen un comportamiento consistente a través de los bloques y que los bloques tienen un comportamiento consistente a través de los tratamientos. Expresado matemáticamente significa que la diferencia de los valores medios para dos tratamientos cualesquiera es la misma en todo un bloque y que la diferencia de los valores medios para dos bloques cualesquiera es la misma para cada tratamiento.\\
-\\
+
 \begin{itemize}
   \item Variable respuesta: Número de días hasta la aparición de síntomas visibles.
   \item Factor: Genotipo que tiene cuatro niveles. Es un factor de efectos fijos ya que viene decidido qué niveles concretos se van a utilizar.
@@ -1573,6 +1576,1402 @@ Tamaño del experimento: Número total de observaciones (20).
 Para realizar este supuesto en R debemos introducir primero los datos de forma correcta. Podemos introducir los datos directamente en R de forma manual o introducirlos previamente en un archivo de texto o Excel y leerlos en R.
 \\
 \\
+En este caso lo hacemos en un archivo de texto:\\
+\\
+Para cargar los datos utilizamos la función read.table indicando el nombre del archivo (que debe de estar en el directorio de trabajo) e indicando además que tiene cabecera.
+<<>>=
+dias<-read.table("guiado2txt.txt", header = TRUE)
+dias
+@
+
+A continuación debemos transformar tanto la columna de los tratamientos como la de los bloques en un factor para realizar los cálculos posteriores adecuadamente.
+
+<<>>= 
+dias$Fotoperiodo = factor(dias$Fotoperiodo)
+dias$Fotoperiodo
+@
+
+
+<<>>=
+dias$Genotipo = factor(dias$Genotipo)
+dias$Genotipo
+@
+
+Para calcular la tabla ANOVA primero hacemos uso de la función "aov" de la siguiente forma
+
+<<>>=
+mod = aov(Dias ~ Fotoperiodo + Genotipo, data = dias)
+@
+
+donde:
+
+\begin{itemize}
+  \item Días: Nombre de la columna de las observaciones.
+  \item Fotoperiodo: Nombre de la columna en la que están representados los tratamientos.
+  \item Genotipo: Nombre de la columna en la que están representados los bloques.
+  \item data = data.frame en el que están guardados los datos
+\end{itemize}
+
+Ejecutamos
+
+<<>>= 
+mod
+@
+
+y a continuacion mostramos un resumen de los resultados con la función "summary" (verdadera tabla ANOVA):
+<<>>=
+summary(mod)
+@
+
+En la Tabla ANOVA, el valor del estadístico de contraste de igualdad de medias de tratamientos, F = 5.041 deja a su derecha un p-valor igual a 0.017, menor que el nivel de significación del 5\%, por lo que se rechaza la Hipótesis nula de igualdad de medias de tratamientos. Es decir, existen diferencias significativas en el número de días hasta la aparición de la infección entre los cuatro genotipos.\\
+\\
+En esta Tabla ANOVA, también se observa que el valor del estadístico de contraste de igualdad de medias de bloques, F = 3.619 deja a su derecha un p-valor igual a 0.037, menor que el nivel de significación del 5\%, por lo que se rechaza la Hipótesis nula de igualdad de medias de bloques. Es decir, existen diferencias significativas en el número de días hasta la aparición de la infección entre los cinco tipos de fotoperiodos. Por lo tanto, se concluye que los niveles de ambos factores influyen de forma significativa en el número de días hasta la aparición de los síntomas de infección del moho.\\
+\\
+2.\textbf{En caso de que influyan significativamente alguno de los dos factores, extraer conclusiones utilizando el método de Duncan.}
+\\
+\\
+Primero vamos a hacer el contraste de Duncan para los tratamientos: Genotipos
+
+<<>>=
+duncan <- duncan.test(mod, "Genotipo" ,   
+                      main= "Número de días con diferentes genotipos")
+duncan
+@
+
+En la tabla del factor Tipo de genotipo hay dos subconjuntos que se diferencian entre sí; el subconjunto 1 está formado por las medias del genotipo Armelle y el subconjunto 2 por las medias de los genotipos Golden, Promise y Emir. Y dentro de cada subconjunto no se aprecian diferencias significativas entre las medias. También se observa que en el genotipo Emir se produce el mayor número medio de días hasta la aparición de la infección (636) y en el genotipo Armelle se produce el menor (592).\\
+\\
+Segundo vamos a hacer el contraste de Duncan para los bloques: Fotoperiodos
+
+<<>>=
+duncan1 <-duncan.test(mod, "Fotoperiodo",  
+                      main= "Número de días con diferentes fotoperiodos")
+duncan1
+@
+
+En la tabla del factor Tipo de fotoperiodo hay dos subconjuntos que se diferencian entre sí; el subconjunto 1 está formado por las medias de los Fotoperiodos 0 y 2 y el subconjunto 2 por las medias de los fotoperiodos 2, 4, 8 y 16. Y dentro de cada subconjunto no se aprecian diferencias significativas entre las medias. También se observa que en el fotoperiodo 0 se produce el mayor número medio de días hasta la aparición de la infección (642.5) y en los fotoperiodos 8 y 16 se produce el menor\\
+\\
+
+3. \textbf{Estudiar las hipótesis de modelo: Homocedasticidad, Independencia y Normalidad.}
+\\
+\\
+\textbf{Estudiamos la homocedasticidad mediante el test de Barlett}
+
+<<>>=
+bartlett.test(dias$Dias,  dias$Fotoperiodo)
+@
+
+<<>>=
+bartlett.test(dias$Dias,  dias$Genotipo)
+@
+
+Las Tablas muestran los resultados del contraste de Barlett de igualdad de varianzas en todos los grupos del factor genotipo y en todos los grupos del factor Fotoperiodo. Los P-valores, 0.5474 y 0.6537 indican que indican que no se debe rechazar la igualdad entre las varianzas ni el factor genotipo ni el factor fotoperiodo.\\
+\\
+\textbf{Estudiamos la independencia gráficamente}
+
+<<>>= 
+layout(matrix(c(1,2,3,4),2,2))
+plot(mod)
+@
+
+En esta salida, como en la figura 28, interpretamos el gráfico que se muestra en la Fila 1, Columna 1. Es decir, el gráfico el que se representan los residuos en el eje de ordenadas y los valores predichos por el modelo en el eje de abscisas. Este gráfico no muestra ningún aspecto que haga sospechar de la hipótesis de independencia de los residuos.
+\\
+\\
+Estudiamos la Normalidad gráficamente mediante el gráfico probabilístico normal y analíticamente mediante el contraste de Shapiro-Wilk\\
+\\
+Observamos el gráfico que se muestra en la Fila 2, Columna1. Es decir, el gráfico el que se representan los residuos estandarizados en el eje de ordenadas y cuantiles teóricos en el eje de abscisas. En dicho gráfico se aprecian desviaciones a la normalidad, pero el contraste ANOVA es robusto frente a desviaciones pequeñas de la normalidad. Realizaremos a continuación el contraste de Shapiro-Wilk para comprobar analíticamente la normalidad de los residuos.
+
+<<>>=
+shapiro.test(mod$residuals)
+@
+
+El valor del p-valor es de 0.4176, no pudiéndose rechazar la hipótesis de normalidad.
+\vspace{0.3cm}
+
+\textbf{Ejercicio Guiado 3}
+\vspace{0.3cm}
+
+Se realiza un estudio para determinar el efecto del nivel del agua y del tipo de planta sobre la longitud global del tallo de las plantas de guisantes. Para ello, se utilizan tres niveles de agua (bajo, medio y alto) y dos tipos de plantas (sin hojas y convencional). Se dispone para el estudio de dieciocho plantas sin hojas y dieciocho plantas convencionales. Se dividen aleatoriamente los dos tipos de plantas en tres subgrupos y después se asignan los niveles de agua aleatoriamente a los dos grupos de plantas. Los datos sobre la longitud del tallo de los guisantes (en centímetros) se muestran en la siguiente tabla:
+
+\begin{table}[H]
+\begin{tabular}{llllll}
+\cline{1-4}
+\multicolumn{1}{|l|}{}               & \multicolumn{3}{l|}{Nivel del agua}                                                                                                                                                                                                                                                                                                                                                                                                       &  &  \\ \cline{1-4}
+\multicolumn{1}{|l|}{Tipo de planta} & \multicolumn{1}{l|}{Bajo}                                                                                                                & \multicolumn{1}{l|}{Medio}                                                                                                                    & \multicolumn{1}{l|}{Alto}                                                                                                                      &  &  \\ \cline{1-4}
+\multicolumn{1}{|l|}{Sin hojas}      & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}69.50\\    \\ 69.00\\    \\ 75.00\\    \\ 70.00\\    \\ 74.40\\    \\ 75.00\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}96.10\\    \\ 102.30\\    \\ 107.50\\    \\ 103.60\\    \\ 100.70\\    \\ 101.80\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}121.00\\    \\ 122.90\\    \\ 123.10\\    \\ 125.70\\    \\ 125.20\\    \\ 120.10\end{tabular}} &  &  \\ \cline{1-4}
+\multicolumn{1}{|l|}{convencional}   & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}71.10\\    \\ 69.20\\    \\ 70.40\\    \\ 73.20\\    \\ 71.20\\    \\ 70.90\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}81.00\\    \\ 85.80\\    \\ 86.00\\    \\ 87.50\\    \\ 88.10\\    \\ 87.60\end{tabular}}      & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}101.10\\    \\ 103.20\\    \\ 106.10\\    \\ 109.70\\    \\ 110.00\\    \\ 99.00\end{tabular}}  &  &  \\ \cline{1-4}
+                                     &                                                                                                                                          &                                                                                                                                               &                                                                                                                                                &  &  \\
+                                     &                                                                                                                                          &                                                                                                                                               &                                                                                                                                                &  &  \\
+                                     &                                                                                                                                          &                                                                                                                                               &                                                                                                                                                &  & 
+\end{tabular}
+\end{table}
+
+Para un nivel de significación del 5\%.\\
+\begin{enumerate}
+  \item ¿Se puede afirmar que los distintos niveles de agua influyen en la longitud del tallo de los guisantes? ¿Y el tipo de planta?
+  \item ¿La efectividad del nivel del agua es la misma para los dos tipos de plantas?
+  \item Estudia, utilizando el método de Newman-Keuls, qué nivel de agua es más efectivo.
+\end{enumerate}
+
+\textbf{Solución:}
+\\
+\\
+1. ¿Se puede afirmar que los distintos niveles de agua influyen en la longitud del tallo de los guisantes? ¿Y el tipo de planta?
+\\
+El problema planteado se modeliza a través de un diseño de dos factores con replicación.
+El modelo matemático es:
+$$Y_{ij}= \mu + \tau + \beta_j + (\tau \beta)_{ij} + u_{ij},     i=1,2,3;     j=1,2$$
+\begin{itemize}
+  \item Variable respuesta: Longitud del tallo.
+  \item Factor A: Nivel del agua con tres niveles. Es un factor de Efectos fijos.
+  \item Factor B: Tipo de planta con dos niveles. Es un factor de Efectos fijos.
+  \item Tamaño del experimento: Número total de observaciones (36).
+\end{itemize}
+
+Para realizar este supuesto en R debemos introducir primero los datos de forma correcta. Podemos introducir los datos directamente en R de forma manual o introducirlos previamente en un archivo de texto o Excel y leerlos en R.\\
+\\
 En este caso lo hacemos en un archivo de texto:
+
+<<>>=
+factorial= read.table("Guiado3.txt", header = TRUE)
+factorial
+@
+
+A continuación debemos transformar todas las columnas que contienen a los factores en un factor para poder realizar los cálculos posteriores adecuadamente.
+
+<<>>=
+factorial$agua <- factor(factorial$Nivel_agua)
+factorial$agua
+@ 
+
+<<>>=
+factorial$planta <- factor(factorial$Tipo_planta)
+factorial$planta
+@
+
+Para responder a este apartado debe resolverse el contraste de igualdad de medias para el factor A:\\
+\\
+$H_0= \mu_1= \mu_2= \mu_3= \mu$   
+vs    
+$H_1= \mu_i \neq \mu_j$     para algún $i\neq j$
+\\
+\\
+y para el factor B:\\
+\\
+$H_0= \mu_1= \mu_2= \mu$       
+vs
+$H_1= \mu_i \neq \mu_j$     para algún $i \neq j$
+\\
+\\
+Para calcular la tabla ANOVA en R primero hacemos uso de la función "aov"  y a continuación "summary" de la siguiente forma:
+
+<<>>= 
+mod  =  aov(Longitud_tallo ~  agua* planta , 
+            data = factorial)
+mod
+@
+
+<<>>=-
+summary(mod)
+@
+
+\begin{itemize}
+  \item El valor del estadístico de contraste de igualdad de medias del factor Nivel\_agua, F= 572.56 deja a su derecha un p-valor menor que 0.001, menor que el nivel de significación del 5\%, por lo que se rechaza la Hipótesis nula de igualdad de medias de los niveles del factor Nivel\_agua. Es decir, existen diferencias significativas en la longitud del tallo de guisantes dependiendo del nivel del agua.
+  \item El valor del estadístico de contraste de igualdad de medias del factor Tipo\_planta, F= 132.445 deja a su derecha un p-valor menor que 0.001, menor que el nivel de significación del 5\%, por lo que se rechaza la Hipótesis nula de igualdad  de  medias del  factor  Tipo\_planta.  Es decir,  el tipo de  planta  afecta significativamente a la longitud del tallo de guisantes.
+\end{itemize}
+
+2.\textbf{¿La efectividad del nivel del agua es la misma para los dos tipos de plantas?}
+\\
+\\
+Para responder a esta pregunta, realizamos el contraste de hipótesis sobre la interacción de los dos factores.
+\vspace{0.3cm}
+
+$H_0 = (\tau \beta)_{ij} = 0$ (no existe interacción)  
+vs   
+$H_1 = \tau \beta_{ij} \neq 0$ (existe interacción).
+\vspace{0.3cm}
+
+En la Tabla ANOVA mostrada anteriormente, el valor del estadístico de contraste de la interacción de los dos factores, F= 27.32 deja a su derecha un p-valor menor que 0.001, menor que el nivel de significación del 5\%, por lo que se rechaza la Hipótesis nula de no interacción entre los factores. Por lo tanto la efectividad del nivel de agua no es la misma para los dos tipos de plantas. Es decir, puede ocurrir que un nivel de agua influya en el crecimiento de la longitud del tallo con un tipo de planta pero no con el otro o influya de distinta forma.\\
+\\
+
+3. \textbf{Estudia, utilizando el método de Newman- Keuls, qué nivel de agua es más efectivo}.
+
+<<>>=
+library(agricolae)
+@
+
+<<>>=
+contraste  <- SNK.test(mod,"agua", console=TRUE, 
+                       main=" Contraste de Newman-Keuls para el factor nivel del agua")
+@
+
+En la tabla  se muestran los subgrupos formados  de medias iguales al utilizar el método de Newman-Keuls.  Hay tres subconjuntos que se diferencian entre sí y cada subconjunto está formado por un solo nivel de agua. También se observa que con el nivel de agua alto se produce la mayor longitud del tallo de guisantes, 113.925 cm, y con el nivel Bajo se produce el menor 71.575 cm.
+\vspace{0.3cm}
+
+\section{Ejercicios propuestos}
+\vspace{0.3cm}
+
+\textbf{Ejercicio Propuesto 1}
+\vspace{0.3cm}
+
+La convección es una forma de transferencia de calor por los fluidos debido a sus variaciones de densidad por la temperatura; las partes calientes ascienden y las frías descienden formando las corrientes de convección que hacen uniforme la temperatura del fluido. Se ha realizado un experimento para determinar las modificaciones de la densidad de fluido al elevar la temperatura en una determinada zona. Los resultados obtenidos han sido los siguientes:
+
+\begin{table}[H]
+\begin{tabular}{llllll}
+\hline
+\multicolumn{1}{|l|}{Temperatura} & \multicolumn{5}{l|}{Densidad}                                                                                                              \\ \hline
+\multicolumn{1}{|l|}{100}         & \multicolumn{1}{l|}{21.8} & \multicolumn{1}{l|}{21.9} & \multicolumn{1}{l|}{21.7}  & \multicolumn{1}{l|}{21.6} & \multicolumn{1}{l|}{21.7} \\ \hline
+\multicolumn{1}{|l|}{125}         & \multicolumn{1}{l|}{21.7} & \multicolumn{1}{l|}{21.4} & \multicolumn{1}{l|}{21.5}  & \multicolumn{1}{l|}{21.4} & \multicolumn{1}{l|}{}     \\ \hline
+\multicolumn{1}{|l|}{150}         & \multicolumn{1}{l|}{21.9} & \multicolumn{1}{l|}{21.8} & \multicolumn{1}{l|}{21.8}  & \multicolumn{1}{l|}{21.6} & \multicolumn{1}{l|}{21.5} \\ \hline
+\multicolumn{1}{|l|}{175}         & \multicolumn{1}{l|}{21.9} & \multicolumn{1}{l|}{22.1} & \multicolumn{1}{l|}{21.85} & \multicolumn{1}{l|}{21.9} & \multicolumn{1}{l|}{}     \\ \hline
+                                  &                           &                           &                            &                           &                           \\
+                                  &                           &                           &                            &                           &                          
+\end{tabular}
+\end{table}
+
+Responder a las siguientes cuestiones:
+
+¿Afecta la temperatura a la densidad del fluido?
+Determinar qué temperaturas producen modificaciones significativas en la densidad media del fluido.
+Estudiar las hipótesis del modelo: Homocedasticidad, independencia y normalidad.
+¿Se puede afirmar que las temperaturas de 100 y 125 producen menos densidades de fluido en promedio que las temperaturas de 150 y 175?
+\\
+\\
+Solucion
+
+<<>>=
+practico1<- read.table("practico1.txt", header = TRUE)
+practico1
+@
+
+El problema planteado se modeliza a través de un diseño unifactorial totalmente aleatorizado de efectos fijos no-equilibrado.
+
+\begin{itemize}
+  \item Variable respuesta: Densidad del fluido.
+  \item Factor: Temperatura: Es un factor de Efectos fijos.
+  \item Modelo no-equilibrado: Los niveles de los factores tienen distinto número de elementos.
+\end{itemize}
+
+¿Afecta la temperatura a la densidad del fluido?
+\\
+convirtiendo la variable temperatura a factor
+
+<<>>=
+practico1$Temperatura <-factor(practico1$Temperatura)
+practico1$Temperatura
+@
+Calculando el modele y la tabla ANOVA.
+<<>>=
+modp1 <- aov(Densidad ~ Temperatura, data = practico1)
+modp1
+summary(modp1)
+@
+
+El  valor de F experimental 6.983, deja a su derecha un p-valor = 0.00419 inferior a 0.05, por lo que se rechaza la hipótesis nula de igualdad de medias. Concluyendo que existen diferencias significativas en la densidad del fluido en función de la modificación de la temperatura\\
+\\
+2. Determinar qué temperaturas producen modificaciones significativas en la densidad media del fluido
+
+<<>>=
+modp1.tukey <- TukeyHSD(modp1, ordered = TRUE)
+modp1.tukey
+@
+Se producen diferencias significativas entre las temperaturas 175 y 125
+\\
+\\
+3. Estudiar las hipótesis del modelo: Homocedasticidad, independencia y normalidad.
+\\
+\\
+HOMOCEDASTICIDAD
+
+<<>>=
+bartlett.test(practico1$Densidad, practico1$Temperatura)
+@
+
+La salida muestra el resultado del contraste de Barlett de igualdad de varianzas en todos los grupos. El estadístico de contraste experimental, B= 0.69212, deja a la derecha un p-valor = 0.8751, que nos indica que no se debe rechazar la igualdad entre las varianzas.\\
+\\
+NORMALIDAD
+
+<<>>=
+shapiro.test(modp1$residuals)
+@
+El valor p para la normalidad de los residuos es mayor que 0.05 por lo tanto esto implica normalidad en los los datos. 
+\vspace{0.3cm}
+
+\textbf{Ejercicio propuesto 2}
+\vspace{0.3cm}
+
+Un laboratorio de reciclaje controla la calidad de los plásticos utilizados en bolsas. Se desea contrastar si existe variabilidad en la calidad de los plásticos que hay en el mercado. Para ello, se eligen al azar cuatro plásticos y se les somete a una prueba para medir el grado de resistencia a la degradación ambiental. De cada plástico elegido se han seleccionado ocho muestras y los resultados de la variable que mide la resistencia son los de la tabla adjunta.
+
+\begin{table}[H]
+\begin{tabular}{lllllllll}
+\cline{1-8}
+\multicolumn{1}{|l|}{\begin{tabular}[c]{@{}l@{}}Calidad\\    \\ plásticos\end{tabular}} & \multicolumn{7}{l|}{Resistencia}                                                                                                                                                           &  \\ \cline{1-8}
+\multicolumn{1}{|l|}{Plástico A}                                                        & \multicolumn{1}{l|}{135} & \multicolumn{1}{l|}{175} & \multicolumn{1}{l|}{97}  & \multicolumn{1}{l|}{169} & \multicolumn{1}{l|}{213} & \multicolumn{1}{l|}{171} & \multicolumn{1}{l|}{115} &  \\ \cline{1-8}
+\multicolumn{1}{|l|}{Plástico B}                                                        & \multicolumn{1}{l|}{275} & \multicolumn{1}{l|}{170} & \multicolumn{1}{l|}{154} & \multicolumn{1}{l|}{133} & \multicolumn{1}{l|}{219} & \multicolumn{1}{l|}{187} & \multicolumn{1}{l|}{220} &  \\ \cline{1-8}
+\multicolumn{1}{|l|}{Plástico C}                                                        & \multicolumn{1}{l|}{169} & \multicolumn{1}{l|}{239} & \multicolumn{1}{l|}{184} & \multicolumn{1}{l|}{222} & \multicolumn{1}{l|}{253} & \multicolumn{1}{l|}{179} & \multicolumn{1}{l|}{280} &  \\ \cline{1-8}
+\multicolumn{1}{|l|}{Plástico D}                                                        & \multicolumn{1}{l|}{115} & \multicolumn{1}{l|}{105} & \multicolumn{1}{l|}{93}  & \multicolumn{1}{l|}{85}  & \multicolumn{1}{l|}{120} & \multicolumn{1}{l|}{74}  & \multicolumn{1}{l|}{87}  &  \\ \cline{1-8}
+                                                                                        &                          &                          &                          &                          &                          &                          &                          &  \\
+                                                                                        &                          &                          &                          &                          &                          &                          &                          & 
+\end{tabular}
+\end{table}
+
+¿Qué conclusiones se deducen de este experimento?
+\vspace{0.3cm}
+
+\textbf{Solución:}
+\vspace{0.3cm}
+
+Los cuatro tipos de plásticos analizados corresponden a una selección aleatoria de 4 conjuntos de observaciones extraídos aleatoriamente del total de diferentes tipos de plásticos que hay en el mercado, entre los cuales debemos observar si existen o no diferencias significativas. Nos encontramos por tanto ante un diseño unifactorial completamente aleatorio con efectos aleatorios .\\
+\\
+En este modelo, se supone que las variables $\tau_i$ son variables aleatorias normales independientes con media 0 y varianza común $\sigma^2_\tau$.
+
+<<>>=
+Propuesto2 <- read.table("propuesto2.txt", header = TRUE)
+Propuesto2
+@
+
+<<>>=
+Propuesto2$Plastico <- factor(Propuesto2$Plastico)
+Propuesto2$Plastico
+@
+
+<<>>=
+modp2 <- aov(Resistencia ~ Plastico, data = Propuesto2)
+modp2
+summary(modp2)
+@
+
+El valor del estadístico de contraste es igual a 17.23 que deja a la derecha un p-valor de 1.55e-06, rechazando la Hipótesis nula tanto a un nivel de significación del 5\% como del 1\%. Podemos concluir que los datos muestran evidencias de variabilidad en la resistencia para la degradación ambiental según el tipo de plástico empleado en la fabricación de la bolsa.
+\vspace{0.3cm}
+
+\textbf{Ejercicio Propuesto 3}
+\vspace{0.3cm}
+
+Debido a la proliferación de los campos de golf y a la gran cantidad de agua que necesitan, un grupo de científicos estudia la calidad de varios tipos de césped para implantarlo en invierno en los campos de golf. Para ello, miden la distancia recorrida por una pelota de golf, en el campo, después de bajar por una rampa (para proporcionar a la pelota una velocidad inicial constante). El terreno del que disponen tiene mayor pendiente en la dirección norte-sur, por lo que se aconseja dividir el terreno en cinco bloques de manera que las pendientes de las parcelas individuales dentro de cada bloque sean las mismas. Se utilizó el mismo método para la siembra y las mismas cantidades de semilla. Las mediciones son las distancias desde la base de la rampa al punto donde se pararon las pelotas. En el estudio se incluyeron las variedades: Agrostis Tenuis (Césped muy fino y denso, de hojas cortas y larga duración), Agrostis Canina (Hoja muy fina, estolonífera. Forma una cubierta muy tupida), Paspalum Notatum (Hojas gruesas, bastas y con rizomas. Forma una cubierta poco densa), Paspalum Vaginatum (Césped fino, perenne, con rizomas y estolones).
+
+\begin{table}[H]
+\begin{tabular}{lllllllll}
+\cline{1-6}
+\multicolumn{1}{|l|}{}                     & \multicolumn{1}{l|}{Bloque 1} & \multicolumn{1}{l|}{Bloque 2} & \multicolumn{1}{l|}{Bloque 3} & \multicolumn{1}{l|}{Bloque 4} & \multicolumn{1}{l|}{Bloque 5} &  &  &  \\ \cline{1-6}
+\multicolumn{1}{|l|}{Agrosty   Tennis}     & \multicolumn{1}{l|}{1.30}     & \multicolumn{1}{l|}{1.60}     & \multicolumn{1}{l|}{0.50}     & \multicolumn{1}{l|}{1.20}     & \multicolumn{1}{l|}{1.10}     &  &  &  \\ \cline{1-6}
+\multicolumn{1}{|l|}{Agrosty   Canina}     & \multicolumn{1}{l|}{2.20}     & \multicolumn{1}{l|}{2.40}     & \multicolumn{1}{l|}{0.40}     & \multicolumn{1}{l|}{2.00}     & \multicolumn{1}{l|}{1.80}     &  &  &  \\ \cline{1-6}
+\multicolumn{1}{|l|}{Paspalum   Notatum}   & \multicolumn{1}{l|}{1.80}     & \multicolumn{1}{l|}{1.70}     & \multicolumn{1}{l|}{0.60}     & \multicolumn{1}{l|}{1.50}     & \multicolumn{1}{l|}{1.30}     &  &  &  \\ \cline{1-6}
+\multicolumn{1}{|l|}{Paspalum   Vaginatum} & \multicolumn{1}{l|}{3.90}     & \multicolumn{1}{l|}{4.40}     & \multicolumn{1}{l|}{2.00}     & \multicolumn{1}{l|}{4.10}     & \multicolumn{1}{l|}{3.40}     &  &  &  \\ \cline{1-6}
+                                           &                               &                               &                               &                               &                               &  &  & 
+\end{tabular}
+\end{table}
+
+Se pide:
+
+\begin{enumerate}
+  \item Identificar los elementos del estudio (factores, unidades experimentales, variable respuesta, etc.) y plantear detalladamente el modelo matemático utilizado en el experimento.
+  \item ¿Son los bloques fuente de variación?
+  \item Existen diferencias reales entre las distancias medias recorridas por una pelota de golf en los distintos tipos de césped?
+  \item Estudiar las interacciones de los factores.
+  \item Comprobar que se cumplen las hipótesis del modelo.
+  \item Utilizando el método de Duncan y Newman-Keuls, ¿qué tipo de césped ofrece menor resistencia al recorrido de las pelotas?
+\end{enumerate}
+
+\textbf{solucion}
+\\
+\\
+1.Identificar los elementos del estudio (factores, unidades experimentales, variable respuesta, etc.) y plantear detalladamente el modelo matemático utilizado en el experimento.
+
+\begin{itemize}
+  \item Variable respuesta: Distancia.
+  \item Factor: Tipo\_Césped que tiene cuatro niveles. Es un factor de efectos fijos ya que viene decidido qué niveles concretos se van a utilizar.
+  \item Bloque: Bloques que tiene cinco niveles. Es un factor de efectos fijos ya que viene decidido qué niveles concretos se van a utilizar.
+  \item Modelo completo: Los cuatro tratamientos se prueban en cada bloque exactamente una vez.
+  \item Tamaño del experimento: Número total de observaciones (20).
+\end{itemize}
+
+Este experimento se modeliza mediante un diseño en Bloques completos al azar. El modelo matemático es:\\
+
+$$ y_{ij}=\mu + \tau_i+\beta_j +u_{ij},  i=1,2,...  j=1,...5 $$
+
+2. ¿Son los bloques fuente de variación?\\
+\\
+Para realizar este supuesto en R debemos introducir primero los datos de forma correcta. Podemos introducir los datos directamente en R de forma manual o introducirlos previamente en un archivo de texto o Excel y leerlos en R.\\
+\\
+En este caso lo hacemos en un archivo de texto:\\
+\\
+Para cargar los datos utilizamos la función read.table indicando el nombre del archivo (que debe de estar en el directorio de trabajo) e indicando además que tiene cabecera.\\
+\\
+Nota: La ruta hasta llegar al fichero varía en función del ordenador. Utilizar la  orden setwd() para situarse en el directorio de trabajo
+
+<<>>=
+propuesto3<-read.table("propuesto3.txt", header = TRUE)
+propuesto3$cesped=factor(propuesto3$cesped)
+propuesto3$cesped
+propuesto3$bloque=factor(propuesto3$bloque)
+propuesto3$bloque
+@
+
+Para calcular la tabla ANOVA primero hacemos uso de la función "aov" y a continuación mostramos un resumen de los resultados con la función "summary"
+
+<<>>=
+modp3<- aov(distancia ~ cesped+bloque, data = propuesto3)
+modp3
+summary(modp3)
+@
+
+En la Tabla ANOVA, el valor del estadístico de contraste de igualdad de medias de tratamientos, F = 75.89 deja a su derecha un p-valor igual a 4.52e-08, menor que el nivel de significación del 5\%, por lo que se rechaza la Hipótesis nula de igualdad de tratamientos. Así, los tipos de césped influyen en las distancias recorridas por las pelotas. Es decir, existen diferencias significativas en las distancias recorridas por las pelotas entre los cuatro tipos de césped.\\
+\\
+En esta Tabla ANOVA, también se observa que el valor del estadístico de contraste de igualdad de medias de bloques, F = 21.11 deja a su derecha un p-valor igual a 2.32e-05, menor que el nivel de significación del 5\%, por lo que se rechaza la Hipótesis nula de igualdad de bloques. La eficacia de este diseño depende de los efectos de los bloques. En este caso este diseño es más eficaz que el diseño completamente aleatorizado y el contraste principal de las medias de los tratamientos será más sensible a las diferencias entre tratamientos. Por lo tanto la inclusión del factor bloque en el modelo es acertada. Así, las distancias recorridas por las pelotas dependen del tipo de terreno.\\
+\\
+3. Existen diferencias reales entre las distancias medias recorridas por una pelota de golf en los distintos tipos de césped?\\
+\\
+Esta cuestión está contestada afirmativamente en el apartado anterior, en el que la tabla ANOVA nos muestra un valor de F = 75.89  y un Sig. menor que 0.001\\
+\\
+4. Estudiar las interacciones de los factores.\\
+\\
+La interacción entre el factor bloque y los tratamientos vamos a estudiarla analíticamente mediante el  Test de Interacción de un grado de Tukey\\
+\\
+Para realizar este test en R tenemos que utilizar la library "daewr" y dentro de ella la función "Tukey1df". De la siguiente forma:
+
+<<>>= 
+library(daewr)
+Tukey1df(propuesto3)
+@
+
+Puesto que el p-valor (Pr > F) es 9e-04 rechazamos la hipótesis nula de no interacción.\\
+\\
+5. Comprobar que se cumplen las hipótesis del modelo.\\
+\\
+Hipótesis de Normalidad\\
+\\
+La normalidad las vamos a comprobar analíticamente y gráficamente.\\
+Analíticamente mediante el  contraste de Shapiro-Wilk que es adecuado cuando las muestras son pequeñas (n<50)
+<<>>=
+shapiro.test(mod$residuals)
+@
+
+Como podemos observar tenemos un p-valor de 0.9437 que aceptaría la hipótesis de normalidad por ser mayor al 5\% (nivel de significación usual).\\
+\\
+Hipótesis de Homogeneidad de Varianzas\\
+\\
+Para comprobar la hipótesis de homocedasticidad utilizamos el Test de Barlett distinguiendo entre la igualdad entre varianzas del factor principal y la igualdad de varianzas del factor bloque.\\
+\\
+En nuestro ejemplo, el test para igualdad de varianzas del factor principal sería:
+<<>>= 
+bartlett.test(propuesto3$distancia, propuesto3$cesped)
+@
+
+El p-valor es del 0.3428 que al ser mayor del nivel significación usual del 5\% no podemos rechazar la hipótesis de igualdad de varianzas en el factor principal.\\
+\\
+De la misma manera procedemos para el factor bloque:
+<<>>=
+bartlett.test(propuesto3$distancia, propuesto3$bloque)
+@
+
+El p-valor es 0.9181, mayor que 0.05 por lo que no podemos rechazar la hipótesis de igualdad de varianzas en el factor bloque.\\
+\\
+6. Utilizando el método de Duncan y Newman-Keuls, ¿qué tipo de césped ofrece menor resistencia al recorrido de las pelotas?
+
+Para poder hacer uso de ambos contrastes en R tenemos que instalar en primer lugar el paquete "agricolae"
+
+<<>>= 
+library(agricolae)
+(duncan=duncan.test(modp3, "cesped" , group = T))
+SNK.test(mod, "cesped", console =TRUE)
+@
+
+\textbf{Ejercicio Propuesto 4}
+\vspace{0.3cm}
+
+Consideremos de nuevo el ejercicio propuesto 3 sobre un grupo de científicos que estudia la calidad de varios tipos de césped para implantarlo en invierno en los campos de golf. Para ello, miden la distancia recorrida por una pelota de golf, en el campo, después de bajar por una rampa (para proporcionar a la pelota una velocidad inicial constante). El terreno del que disponen tiene mayor pendiente en la dirección norte-sur, por lo que se aconseja dividir el terreno en cinco bloques de manera que las pendientes de las parcelas individuales dentro de cada bloque sean las mismas. Se utilizó el mismo método para la siembra y las mismas cantidades de semilla. Las mediciones son las distancias desde la base de la rampa al punto donde se pararon las pelotas, y al realizar dichas mediciones no se han podido obtener una para cada combinación de tipo de césped y tipo de terreno, sino que sólo se han podido realizar con tres de las variedades del césped en cada uno de los bloques de terreno. Para controlar el efecto del tipo de terreno deciden utilizar un diseño en bloques incompletos. En el estudio se incluyeron las variedades: Agrostis Tenuis (Césped muy fino y denso, de hojas cortas y larga duración), Agrostis Canina (Hoja muy fina, estolonífera. Forma una cubierta muy tupida), Paspalum Notatum (Hojas gruesas, bastas y con rizomas. Forma una cubierta poco densa), Paspalum Vaginatum (Césped fino, perenne, con rizomas y estolones).
+
+\begin{table}[H]
+\begin{tabular}{|l|l|l|l|l|l|l|ll}
+\cline{1-7}
+Variedad de césped & Bloque1 & Bloque2 & Bloque3 & Bloque4 & Bloque5 & Bloque6 &  &  \\ \cline{1-7}
+Agrosty Tennis     & 1.30    &         & 0.50    &         & 1.80    &         &  &  \\ \cline{1-7}
+Agrosty Canina     & 2.20    &         &         & 1.50    &         & 1.80    &  &  \\ \cline{1-7}
+Paspalum Notatum   &         & 2.40    & 2.00    &         &         & 1.60    &  &  \\ \cline{1-7}
+Paspalum Vaginatum &         & 4.40    &         & 4.10    & 3.40    &         &  &  \\ \cline{1-7}
+\end{tabular}
+\end{table}
+
+Se pide:
+
+\begin{enumerate}
+  \item Identificar los elementos del estudio (factores, unidades experimentales, variable respuesta, etc.) y plantear detalladamente el modelo matemático utilizado en el experimento.
+  \item ¿Son los bloques fuente de variación?
+  \item Existen diferencias reales entre las distancias medias recorridas por una pelota de golf en los distintos tipos de césped?
+  \item Comprobar que se cumplen las hipótesis del modelo.
+  \item Utilizando el método de Newman-Keuls, ¿qué tipo de cesped ofrece menor resistencia al recorrido de las pelotas?
+\end{enumerate}
+
+Solución
+\\
+1 Identificar los elementos del estudio (factores, unidades experimentales, variable respuesta, etc.) y plantear detalladamente el modelo matemático utilizado en el experimento.\\
+
+\begin{itemize}
+  \item Variable respuesta: Distancia.
+  \item Factor: Tipo\_Cesped que tiene cuatro niveles. Es un factor de efectos fijos ya que viene decidido qué niveles concretos se van a utilizar.
+  \item Bloque: Bloques que tiene seis niveles. Es un factor de efectos fijos ya que viene decidido qué niveles concretos se van a utilizar.
+  \item Modelo incompleto: Todos los tratamientos no se prueban en cada bloque.
+  \item Tamaño del experimento: Número total de observaciones (12).
+\end{itemize}
+
+<<>>=
+propuesto4<-read.table("propuesto4.txt", header = TRUE)
+propuesto4
+@
+
+A continuación debemos transformar tanto la columna de los tratamientos como la de los bloques en un factor para podemos realizar los cálculos posteriores adecuadamente.
+
+<<>>=
+propuesto4$Tratamiento = factor(propuesto4$cesped)
+propuesto4$Tratamiento
+@
+
+<<>>=
+propuesto4$Bloque = factor(propuesto4$bloque)
+propuesto4$Bloque
+@
+
+2. ¿Son los bloques fuente de variación?\\
+\\
+Para poder analizar los datos mediante un diseño BIB debemos instalar y cargar dos paquetes de R especializados en este tipo de diseños:
+
+<<>>=
+library(daewr)
+@
+
+Por lo que tenemos también que cargar e instalar el paquete colorspace
+
+<<>>= 
+library(colorspace)
+@
+
+Cargamos e instalamos el paquete zoo
+<<>>=
+library(zoo)
+library(daewr)
+library(AlgDesign)
+@
+
+
+La función "BIBsize(t , k)" de la librería daewr nos permite saber si el diseño puede realizarse.  Calcula los parámetros del diseño donde
+
+\begin{itemize}
+  \item t = número de niveles del factor tratamiento.
+  \item k = número de tratamientos por bloque.
+Ejecutamos:
+<<>>=
+BIBsize(t = 4 , k = 2)
+@
+
+El análisis de este modelo lo podemos realizar en R de dos formas:\\
+\\
+A) Realizaremos el análisis: evaluando primero el efecto de los bloques y después el de los tratamientos utilizando dos funciones
+\\
+\item Para evaluar el efecto de los bloques, la suma de cuadrados de bloques debe ajustarse por los tratamientos, por lo tanto primero se introducen los tratamientos y después los bloques:
+\item Para calcular la tabla ANOVA hacemos uso de la función "aov" (aov(y ~ A + B, data=mydataframe) asume suma de cuadrados tipo I) de la siguiente forma:
+<<>>=
+modp4 <- aov(distancia ~ cesped + bloque, 
+             data = propuesto4 )
+modp4
+summary(modp4)
+@
+\end{itemize}
+
+El p-valor 0.035 menor que el nivel de significación 0.05, por lo que se rechaza la hipótesis nula de igualdad de bloques y concluimos que los bloques son una fuente de variación.\\
+\\
+3. Existen diferencias reales entre las distancias medias recorridas por una pelota de golf en los distintos tipos de césped?\\
+\\
+Para evaluar el efecto de los tratamientos, la suma de cuadrados de tratamientos debe ajustarse por bloques, por lo tanto primero se introducen los bloques y después los tratamientos.
+<<>>= 
+modp42 <- aov(distancia ~ bloque + cesped, data = propuesto4 )
+@
+
+donde:
+\begin{itemize}
+  \item distancia = nombre de la columna de las observaciones
+  \item ceped = nombre de la columna en la que están representados los tratamientos
+  \item bloque = nombre de la columna en la que están representados los bloques
+  \item data = data.frame en el que están guardados los datos
+\end{itemize}
+
+<<>>=
+modp42
+summary(modp42)
+@
+
+El valor del estadístico de contraste de igualdad de tipo de césped, F = 3.727, deja a su derecha un p-valor 0.1540, mayor que el nivel de significación del 5\%, por lo que no se rechaza la Hipótesis Nula de igualdad de tratamientos. Por lo tanto no hay diferencias reales entre las distancias medias recorridas por una pelota de golf en los distintos tipos de césped ya que el p-valor es mayor que 0.05.\\
+\\
+B) Realizaremos el análisis evaluando tanto los tratamientos como los bloques ejecutando solo una función.\\
+\\
+Para ello necesitamos instalar y cargar el paquete "car":
+Una vez  instalado cargado el paquete realizamos el ANOVA
+
+<<>>=
+modp43 <- lm(distancia ~ cesped + bloque, 
+             data = propuesto4 )
+modp43
+car::Anova(modp43, type="III")
+@
+
+Los resultados obtenidos coinciden con los realizados primero a los bloque y después a los tratamientos.\\
+\\
+4. Comprobar que se cumplen las hipótesis del modelo.\\
+\\
+Los supuestos que han de verificarse son Normalidad, Homocedasticidad e Independencia además del supuesto de aditividad entre los tratamientos y los bloques.\\
+\\
+Hipótesis de normalidad\\
+\\
+Comprobamos la hipótesis de normalidad mediante el análisis de la normalidad de los residuos. Para ello, hacemos uso del test de Shapiro-Wilks:
+
+<<>>= 
+shapiro.test(modp43$residuals)
+@
+
+El p-valor, 0.5178, es mayor que el nivel de significación del 5\%, aceptándose la hipótesis de normalidad.\\
+\\
+Homogeneidad de varianzas\\
+\\
+En este caso hacemos uso del Test de Barlett para contrastar la igualdad entre varianzas del factor.
+
+<<>>= 
+bartlett.test(propuesto4$distancia, propuesto4$cesped)
+@
+
+El p-valor es 0.8571 por lo tanto no se puede rechazar la hipótesis de homogeneidad de las varianzas y se concluye que la cuatro variedades de césped tienen varianzas homogéneas.
+
+<<>>=
+bartlett.test(propuesto4$distancia, propuesto4$bloque)
+@
+
+El p-valor es mayor que 0.05, por lo tanto no se puede rechazar la hipótesis de homogeneidad de las varianzas los bloques.\\
+\\
+5. Utilizando el método de Newman-Keuls, ¿qué tipo de cesped ofrece menor resistencia al recorrido de las pelotas?
+
+<<>>=
+library(agricolae)
+Newman_Keuls<- SNK.test(modp43,"cesped", console=TRUE, 
+                        main="") 
+@
+
+ En la  tabla  se muestran los subgrupos formados de medias iguales  al utilizar el método de Newman-Keuls.  Hay dos subconjuntos que se diferencian  entre sí. Por una parte el formado por el tipo de césped C4 y por otra parte el subgrupo formado por los tipos de césped: C3, C2 y C1. También se observa que el tipo de césped donde la distancia recorrida es más grande  es el C4 con una distancia de 3.96667 y la distancia más corta es de 1.2 en el césped C1.
+\vspace{0.3cm}
+
+\textbf{Ejercicio Propuesto 5}
+\vspace{0.3cm}
+
+Un investigador quiere evaluar la productividad de cuatro variedades de aguacates, A, B, C y D. Para ello decide realizar el ensayo en un terreno que posee un gradiente de pendiente de oriente a occidente y además, diferencias en la disponibilidad de Nitrógeno de norte a sur, para controlar los efectos de la pendiente y la disponibilidad de Nitrógeno, utilizó un diseño de cuadrado latino, los datos corresponden a la producción en kg/parcela.
+
+
+Responder a las siguientes cuestiones:
+
+\begin{enumerate}
+  \item ¿Se puede afirmar que la productividad media de las cuatro variedades de aguacate es la misma?
+  \item ¿Qué supuestos han de verificarse?
+  \item ¿Se obtiene la misma producción con las cuatro variedades de aguacate? En caso negativo, analizar mediante el procedimiento de Tukey y Newman-Keuls, con qué variedad de aguacate hay mayor producción.
+\end{enumerate}
+
+Solución:
+1. ¿Se puede afirmar que la productividad media de las cuatro variedades de aguacate es la misma?
+
+El análisis de la productividad de las variedades de aguacate corresponde al análisis de un factor con 4 niveles. Dado que en el estudio intervienen dos fuentes de variación: la Disponibilidad de Nitrógeno y la Pendiente, se consideran dos factores de bloque, cada uno de ellos con 4 niveles.
+
+Se pretende, entonces dar respuesta al contraste:
+
+$$H_0: \mu_A = \mu_B = \mu_C = \mu_D $$
+$$ H_1: \mu_i \neq \mu_j  para algun i\neq j$$
+
+\begin{itemize}
+  \item Variable respuesta: Productividad
+  \item Factor: Variedad de aguacate. Es un factor de efectos fijos ya que desde el principio se establecen los niveles concretos que se van a analizar.
+  \item Bloques: Disponibilidad de Nitrógeno y Pendiente, ambos con 4 niveles y ambos de efectos fijos.
+  \item Tamaño del experimento: Número total de observaciones (42) .
+\end{itemize}
+
+<<>>=
+propuesto5 <- read.table("propuesto5.txt", header = TRUE)
+propuesto5
+@
+
+A continuación debemos transformar tanto la columna de los tratamiento como la de los bloques en un factor para podemos realizar los cálculos posteriores adecuadamente.
+
+<<>>= 
+propuesto5$latina = factor(propuesto5$aguacate)
+propuesto5$latina
+@
+
+<<>>=
+propuesto5$Bloque1 = factor(propuesto5$nitrogeno)
+propuesto5$Bloque1
+@ 
+
+<<>>=
+propuesto5$Bloque2 = factor(propuesto5$pendiente)
+propuesto5$Bloque2
+@ 
+
+Para calcular la tabla ANOVA primero hacemos uso de la función "aov" de la siguiente forma:
+
+<<>>=
+modp5 <- aov(productividad ~ aguacate + nitrogeno +
+               pendiente, data = propuesto5 )
+@
+
+donde:
+\begin{itemize}
+  \item productividad: Nombre de la columna de las observaciones
+  \item aguacate :  Nombre de la columna en la que están representados los tratamientos
+  \item nitrogeno : Nombre de la columna en la que está representado el primer factor bloque
+  \item pendiente: Nombre de la columna en la que está representado el segundo factor bloque (letras latinas)
+  \item data = data.frame en el que están guardados los datos
+\end{itemize}
+
+<<>>=
+modp5 <- aov(productividad ~ aguacate + nitrogeno +
+               pendiente, data = propuesto5 )
+modp5
+@
+
+y posteriormente mostramos un resumen de los resultados con la función "summary" (verdadera tabla ANOVA):
+
+<<>>=
+summary(modp5)
+@
+
+Observando los valores de los p-valores, 1.70e-05, 3.92e-09 y 2.13e-08; menores respectivamente que el nivel de significación del 5\%, deducimos que los tres efectos son significativos. Tanto las variedades de aguacates utilizadas, como la pendiente del terreno y la disponibilidad de nitrógeno influyen en la productividad de los aguacates\\
+\\
+
+2. ¿Qué supuestos han de verificarse?\\
+\\
+Los supuestos que han de verificarse en un diseño de cuadrados latinos son Normalidad, Homocedasticidad e Independencia además del supuesto de aditividad entre filas, columnas y tratamientos (es decir, que no haya interacciones entre los mismos).\\
+\\
+Hipótesis de normalidad\\
+\\
+Comprobamos la hipótesis de normalidad mediante el análisis de la normalidad de los residuos. Para ello, hacemos uso del test de Shapiro-Wilks:
+<<>>=
+shapiro.test(mod$residuals)
+@
+
+Observamos el contraste de Shapiro-Wilk que es adecuado cuando las muestras son pequeñas (n<50) y es una alternativa más potente que el test de Kolmogorov-Smirnov. El p-valor (0.07616) es mayor que el nivel de significación del 5\%, aceptándose la hipótesis de normalidad.\\
+\\
+Homogeneidad de varianzas\\
+\\
+En este caso hacemos uso del Test de Barlett para contrastar la igualdad entre varianzas del factor.
+
+<<>>=
+bartlett.test(propuesto5$productividad, propuesto5$aguacate)
+@
+
+El p-valor es 0.3401 por lo tanto no se puede rechazar la hipótesis de homogeneidad de las varianzas y se concluye que la cuatro variedades tienen varianzas homogéneas.
+
+<<>>=
+bartlett.test(propuesto5$productividad, propuesto5$nitrogeno)
+@
+
+<<>>=
+bartlett.test(propuesto5$productividad, propuesto5$pendiente)
+@
+
+Los p-valores son mayores que 0.05, por lo tanto no se puede rechazar la hipótesis de homogeneidad de las varianzas en ninguno de los factores bloques
+
+3. ¿Se obtiene la misma producción con las cuatro variedades de aguacate? En caso negativo, analizar mediante el procedimiento de Tukey y Newman-Keuls, con qué variedad de aguacate hay mayor producción.
+
+<<>>=
+TukeyHSD(mod, "aguacate", ordered = TRUE)
+@
+
+Como se puede observar, todos los intervalos de confianza construidos para las diferencias entre las producciones medias de las variedades no contienen al 0, excepto el correspondiente a la pareja de variedades de aguacates A y D. Lo que significa que todas las producciones medias pueden considerarse distintas estadísticamente excepto las producciones medias correspondientes a las variedades A y D. Se deduce que únicamente no se observan diferencias significativas entre las producciones de las variedades de aguacates A y D (P-valor = 0.4289199).\\
+\\
+La tabla de comparaciones múltiples muestra los intervalos simultáneos construidos por el método de Tukey para cada posible combinación de variedades de aguacates. En la tabla se muestra un resumen de las comparaciones de cada tratamiento con los restantes. Es decir, aparecen comparadas dos a dos las cuatro medias de los tratamientos.
+
+<<>>=
+plot(TukeyHSD(mod, "aguacate"))
+@
+
+<<>>=
+Newman_Keuls  <- SNK.test(mod,"aguacate", console=TRUE)
+@
+
+El contraste de Newman-keuls muestra una tabla de Subconjuntos homogéneos. En nuestro estudio sobre las producciones de aguacates se observan que hay tres subgrupos homogéneos, al primer subgrupo pertenece la Variedad C, con una producción de 827.50 media kg/parcela, el segundo las variedades D y A, con producciones medias de 816.25 y 811.25 Kg(parcela, respectivamente y el tercero la Variedad B, con una producción media de 777.50 kg/parcela. Por lo tanto, se observa que la producción media mayor se obtiene con la Variedad C (827.5 Kg/ parcela) y la menor con la Variedad B (777.50 Kg/parcela).
+\vspace{0.3cm}
+
+\textbf{Ejercicio Propuesto 6} 
+\vspace{0.3cm}
+
+Consideremos de nuevo el ejercicio propuesto 5 del investigador que quiere evaluar la productividad de cuatro variedades de aguacate, A, B, C y D. Para ello, decide realizar el ensayo en un terreno que posee un gradiente de pendiente de oriente a occidente y además, diferencias en la disponibilidad de Nitrógeno de norte a sur. Se seleccionan cuatro disponibilidades de nitrógeno, pero sólo dispone de tres gradientes de pendiente. Para controlar estas posibles fuentes de variabilidad, el investigador decide utilizar un diseño en cuadrado de Youden con cuatro filas, las cuatro disponibilidades de Nitrógeno (NI, N2, N3, N4), tres columnas, los tres gradientes de pendientes (P1, P2, P3) y cuatro letras latinas, las variedades de aguacates (A, B, C, D). Los datos corresponden a la producción en kg/parcela.
+
+\begin{table}[H]
+\begin{tabular}{|l|lll|lllll}
+\cline{1-4}
+          & \multicolumn{3}{l|}{Pendiente}                                                                                                                                                                                  &  &  &  &  &  \\ \cline{1-4}
+Nitrógeno & \multicolumn{1}{l|}{P1}                                                    & \multicolumn{1}{l|}{P2}                                                    & P3                                                    &  &  &  &  &  \\ \cline{1-4}
+N1        & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}D\\    \\ 956\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}A\\    \\ 820\end{tabular}} & \begin{tabular}[c]{@{}l@{}}C\\    \\ 689\end{tabular} &  &  &  &  &  \\ \cline{1-4}
+N2        & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}A\\    \\ 867\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}B\\    \\ 975\end{tabular}} & \begin{tabular}[c]{@{}l@{}}D\\    \\ 680\end{tabular} &  &  &  &  &  \\ \cline{1-4}
+N3        & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}C\\    \\ 850\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}D\\    \\ 775\end{tabular}} & \begin{tabular}[c]{@{}l@{}}B\\    \\ 699\end{tabular} &  &  &  &  &  \\ \cline{1-4}
+N4        & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}B\\    \\ 950\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}C\\    \\ 870\end{tabular}} & \begin{tabular}[c]{@{}l@{}}A\\    \\ 980\end{tabular} &  &  &  &  &  \\ \cline{1-4}
+\end{tabular}
+\end{table}
+
+Responder a las siguientes cuestiones:
+
+\begin{enumerate}
+  \item Estudiar cuál es el tipo de diseño adecuado a este experimento y escribir el modelo matemático asociado.
+  \item ¿Se puede afirmar que la productividad media de las cuatro variedades de aguacate es la misma?
+  \item Comprobar la hipótesis de homocedasticidad
+  \item ¿Se obtiene la misma producción con las cuatro variedades de aguacate? En caso negativo, analizar mediante el procedimiento de Duncan, con qué variedad de aguacate hay mayor producción.
+\end{enumerate}
+
+Solución:\\
+\\
+1. Estudiar cuál es el tipo de diseño adecuado a este experimento y escribir el modelo matemático asociado.\\
+\\
+El análisis de la productividad de las variedades de aguacate corresponde al análisis de un factor con 4 niveles. Dado que en el estudio intervienen dos fuentes de variación: la Disponibilidad de Nitrógeno y la Pendiente, se consideran dos factores de bloque, el primero con 4 niveles y el segundo con tres niveles.\\
+\\
+Se pretende, entonces dar respuesta al contraste:
+
+$$ H_0: \mu_A = \mu_B=\mu_C\mu_D$$
+$$ H_1: \mu_i \neq \mu_j$$
+
+\begin{itemize}
+  \item Variable respuesta: Productividad.
+  \item Factor: Variedad de aguacate. Es un factor de efectos fijos ya que desde el principio se establecen los niveles concretos que se van a analizar.
+  \item Bloques: Disponibilidad de Nitrógeno y Pendiente, con 4 y 3 niveles, respectivamente y ambos de efectos fijos.
+  \item Tamaño del experimento: Número total de observaciones: 12.
+\end{itemize}
+
+2. ¿Se puede afirmar qué la productividad media de las cuatro variedades de aguacate es la misma?
+
+<<>>=
+propuesto6<-read.table("propuesto6.txt", header = TRUE)
+propuesto6
+@
+
+A continuación debemos transformar tanto la columna de los tratamiento como la de los bloques en un factor para podemos realizar los cálculos posteriores adecuadamente.
+
+<<>>=
+propuesto6$Nitrogeno <- factor(propuesto6$Nitrogeno)
+propuesto6$Nitrogeno
+@
+
+<<>>=
+propuesto6$Pendiente <- factor(propuesto6$Pendiente) 
+propuesto6$Pendiente
+@ 
+
+<<>>=
+propuesto6$Variedad <- factor(propuesto6$Variedad)
+propuesto6$Variedad
+@ 
+
+Para poder analizar los datos mediante un diseño BIB debemos instalar y cargar
+los paquetes de R  especializados en este tipo de diseños:
+
+<<>>=
+library(daewr)
+library(AlgDesign)
+@
+
+La función "BIBsize(t , k)" de la librería daewr nos permite saber si el diseño puede realizarse.  Calcula los parámetros del diseño donde
+\begin{itemize}
+  \item t = número de niveles del factor tratamiento.
+  \item k = número de tratamientos por bloque.
+\end{itemize}
+
+
+<<>>=
+BIBsize(t = 4 , k = 3)
+@
+
+El análisis de este modelo lo podemos realizar en R de dos formas:\\
+
+1. Realizaremos el análisis evaluando primero el efecto del tratamiento y después el de los bloques utilizando tres funciones\\
+
+Para cada factor realizamos una tabla ANOVA: 
+\begin{itemize}
+  \item Factor principal: Variedad
+\end{itemize}
+Para evaluar el efecto de los tratamientos, la suma de cuadrados de tratamientos debe ajustarse por bloques, por lo tanto primero se introducen los bloques y después los tratamientos.\\
+\\
+Para calcular la tabla ANOVA hacemos uso de la función "aov" (asume suma de cuadrados tipo I) de la siguiente forma:
+<<>>= 
+modp6 <- aov(Productividad ~  Pendiente + Nitrogeno +
+               Variedad, data = propuesto6)
+@
+
+donde:
+
+\begin{itemize}
+  \item Productividad: Nombre de la columna de las observaciones.
+  \item Variedad: Nombre de la columna en la que están representados los tratamientos.
+  \item Pendiente: Nombre de la columna en la que está representado el primer factor bloque.
+  \item Nitrogeno: Nombre de la columna en la que está representado el segundo factor bloque (letras latinas).
+  \item data = data.frame en el que están guardados los datos.
+\end{itemize}
+
+<<>>=
+modp6
+@
+
+<<>>= 
+summary(modp6)
+@
+
+El  p-valor, 0.0241, es menor que el nivel de significación del 5\%, deducimos que el factor principal: Variedades del aguacate es significativo.
+
+\begin{itemize}
+  \item Factor Bloque: Pendiente
+\end{itemize}
+
+Para evaluar el efecto del primero de los bloques, la suma de cuadrados de bloques debe ajustarse por los tratamientos, por lo tanto primero se introducen los tratamientos y después los bloques:
+
+<<>>= 
+modp62 <- aov(Productividad~ Variedad +  Nitrogeno +
+                Pendiente, data = propuesto6)
+modp62
+summary(modp62)
+@  
+
+El  p-valor, 0.0586, es mayor que el nivel de significación del 5\%, deducimos que el Factor Bloque: Pendiente no es significativo.
+
+\begin{itemize}
+  \item Factor Bloque: Nitrogeno
+\end{itemize}
+
+Para evaluar el efecto del segundo bloque, la suma de cuadrados de bloques debe ajustarse también por los tratamientos, por lo tanto primero se introducen los tratamientos y después los bloques:
+
+<<>>=
+modp63 <- aov(Productividad ~ Variedad +  Pendiente +
+                Nitrogeno, data = propuesto6)
+modp63
+summary(modp63)
+@
+
+El p-valor es 0.0138; menor que el nivel de significación del 5\%, deducimos que Factor Bloque: Nitrógeno es significativo.\\
+\\
+2. Realizaremos el análisis evaluando tanto los tratamientos como los bloques ejecutando solo una función. 
+Para ello necesitamos instalar y cargar el paquete "car"
+
+<<>>=
+modp64 <- lm(Productividad ~ Variedad +  Nitrogeno +
+               Pendiente, data = propuesto6)
+modp64
+@
+
+<<>>=
+car::Anova(mod4, type="III")
+@
+
+Los resultados obtenidos coinciden con los realizados primero a los bloques y después al tratamiento.\\
+\\
+
+3. Comprobar la hipótesis de homocedasticidad
+
+<<>>=
+bartlett.test(propuesto6$Productividad, propuesto6$Variedad)
+@
+
+<<>>=
+bartlett.test(propuesto6$Productividad, propuesto6$Pendiente)
+@
+
+<<>>=
+bartlett.test(propuesto6$Productividad, propuesto6$Nitrogeno)
+@
+
+Los p-valores del factor tratamiento, Variedad de aguacate (0.6145), del factor bloque Pendiente (0.779) y del factor bloque Nitrógeno (0.2759) son mayores que 0.05, por lo tanto no se puede rechazar la hipótesis de homogeneidad de la varianza del tratamiento y de los bloques.\\
+\\
+4. ¿Se obtiene la misma producción con las cuatro variedades de aguacate? En caso negativo, analizar mediante el procedimiento de Duncan, con qué variedad de aguacate hay mayor producción.\\
+\\
+Para realizar el contraste de comparaciones múltiples hay que cargar e instalar el paquete agricolae
+
+<<>>=
+library(agricolae)
+(duncan=duncan.test(modp64, "Variedad" , group = T))
+@
+
+En la tabla se muestran los subgrupos formados de medias iguales al utilizar el método de Duncan.  Hay tres subconjuntos que se diferencian entre sí. Por una parte el formado por la variedad de aguacate B y D, el subgrupo formado por D y C y el formado por A y C. También se observa que la mayor productividad de aguacate es la del tipo B, con una producción de 901.3333 Kg por parcela y la menor el tipo A, 732.0000 kg por parcela.
+\vspace{0.3cm}
+
+\textbf{Ejercicio Propuesto 7}
+\vspace{0.3cm}
+
+En un invernadero se está estudiando el crecimiento de determinadas plantas, para ello se quiere controlar los efectos del terreno, abono, insecticida y semilla. El estudio se realiza con cuatro tipos de semillas diferentes que se plantan en cuatro tipos de terreno, se les aplican cuatro tipos de abonos y cuatro tipos de insecticidas. La asignación de los tratamientos a las plantas se realiza de forma aleatoria. Para controlar estas posibles fuentes de variabilidad se decide plantear un diseño por cuadrados greco-latinos como el que se muestra en la siguiente tabla, donde las letras griegas corresponden a los cuatro tipos de semilla y las latinas a los abonos.\\
+\\
+Responder a las siguientes cuestiones:
+
+\begin{enumerate}
+  \item Estudiar cuál es el tipo de diseño adecuado a este experimento y escribir el modelo matemático asociado.
+  \item ¿Se puede afirmar que el crecimiento de las plantas es el mismo para los cuatro tipos de abonos?¿Y con los distintos insecticidas?
+  \item ¿Existen diferencias significativas en el crecimiento de las plantas con las distintas semillas? ¿Y el tipo de tierra influye en dicho crecimiento?
+  \item ¿Con qué tipo de semilla se produce el mayor crecimiento de las plantas?
+  \item ¿El crecimiento de las plantas es el mismo utilizando al mismo tiempo los abonos A y B que utilizando los abonos C y D?
+\end{enumerate}
+
+Solución:\\
+\\
+1. Estudiar cuál es el tipo de diseño adecuado a este experimento y escribir el modelo matemático asociado.\\
+\\
+Es un diseño en cuadrado greco-latino, la variable respuesta $y_{(ij(hp))}$ viene descrita por la siguiente ecuación
+
+$$y_{(ij(hp))}=\mu+\tau_i+\beta_j+\gamma_k+\delta_p+\varepsilon_{(ij(hp)};  i,j,k.h.p=1,2,3,4$$
+
+La variable respuesta que vamos a estudiar es el crecimiento de determinadas plantas. El factor principal es tipo de abono que se presenta con cuatro niveles.
+
+\begin{itemize}
+  \item Variable respuesta: Crecimiento 
+  \item	Factor: Tipo\_abonos que tiene cuatro niveles. Es un factor de efectos fijos ya que viene decidido que niveles concretos se van a utilizar.
+  \item	Bloques: Insecticidas, Terrenos y Semillas, cada uno con cuatro niveles y de efectos fijos.
+  \item	Tamaño del experimento: Número total de observaciones (16).
+\end{itemize}
+
+Para realizar este supuesto en R debemos introducir primero los datos de forma correcta. Podemos introducir los datos directamente en R de forma manual o introducirlos previamente en un archivo de texto o Excel y leerlos en R.
+En este caso lo hacemos en un archivo de texto.
+
+<<>>=
+propuesto7 <- read.table("propuesto7.txt", header = TRUE)
+propuesto7
+@
+
+A continuación debemos transformar tanto la columna de los tratamiento como la de los bloques en un factor para podemos realizar los cálculos posteriores adecuadamente.
+
+<<>>=
+propuesto7$Tipo_abono <- factor(propuesto7$Tipo_abono)
+propuesto7$Tipo_abono
+@
+
+<<>>=
+propuesto7$Tipo_semilla <- factor(propuesto7$Tipo_semilla) 
+propuesto7$Tipo_semilla
+@
+
+<<>>=
+propuesto7$Tipo_insecticida <- factor(propuesto7$Tipo_insecticida)
+propuesto7$Tipo_insecticida
+@
+
+<<>>=
+propuesto7$Tipo_terreno <- factor(propuesto7$Tipo_terreno)
+propuesto7$Tipo_terreno
+@
+
+2. ¿Se puede afirmar que el crecimiento de las plantas es el mismo para los cuatro tipos de abonos? ¿Y con los distintos insecticidas?\\
+\\
+Primero vamos a obtener la tabla ANOVA
+
+<<>>=
+modp7 <- aov(Crecimiento~ Tipo_abono + Tipo_semilla +
+               Tipo_insecticida + Tipo_terreno, 
+             data = propuesto7)
+modp7
+summary(modp7)
+@
+
+Son significativos los efectos de todos los factores 
+Para determinar si el crecimiento de las plantas es el mismo para los cuatro tipos de abonos y con los distintos insecticidas, vamos a realizar contrastes de comparaciones múltiples, por ejemplo de Duncan para los tipos de abonos y Newman Keuls para los insecticidas.
+Recordar que hay que cargar e instalar el paquete agricolae
+
+<<>>=
+library(agricolae)
+(duncan=duncan.test(modp7, "Tipo_abono" , group = T))
+@
+
+El mayor crecimiento de las plantas se produce con el Abono D siendo la altura que alcanza de 11.75 y la menor altura (7.75) la alcanza con el tipo de abono C
+
+<<>>=
+Newman_Keuls  <- SNK.test(modp7,"Tipo_insecticida", 
+                          console=TRUE, 
+                          main=" Contraste de Newman-Keuls para el factor tipo de insecticida")
+@
+
+La menor altura (7.5) la alcanza cuando se le suministra el Insecticida 1.\\
+\\
+3. ¿Existen diferencias significativas en el crecimiento de las plantas con las distintas semillas? ¿Y el tipo de tierra influye en dicho crecimiento?\\
+\\
+Aplicamos el contraste de comparaciones múltiple de Tukey
+
+<<>>=
+mod.tukey<- TukeyHSD(modp7, "Tipo_semilla", ordered = TRUE)
+mod.tukey
+@
+
+Comprobamos que únicamente hay diferencias significativas entre los tipos de semillas alfa-gamma (p-valor = 0.0139) y entre alfa-beta (p-valor =0.0171).
+
+Para determinar si el tipo de terreno influye en el crecimiento aplicamos el método de comparaciones múltiples LSD.
+
+<<>>=
+LSD.test(modp7,"Tipo_terreno", p.adj="bonferroni", console=TRUE)
+@
+
+Hay dos grupos de terrenos que difieren significativamente, por un lado el grupo formado por los tipos de terrenos 1,2 y 4 y por otra parte el grupo formado un solo tipo de terreno, el tipo de terreno 3. El mayor crecimiento de las plantas se produce en el tipo de terreno 1 con un crecimiento de 11 u.c.\\
+\\
+4. ¿Con qué tipo de semilla se produce el mayor crecimiento de las plantas?
+
+<<>>=
+Newman_Keuls1  <- SNK.test(modp7,"Tipo_semilla", 
+                           console=TRUE, 
+                           main=" Contraste de Newman-Keuls para el factor tipo de semilla ")
+@
+
+El mayor crecimiento de la planta se produce con el tipo de semilla alfa (11.50 u.c.)\\
+\\
+5. ¿El crecimiento de las plantas es el mismo utilizando al mismo tiempo los abonos A y B que utilizando los abonos C y D?
+
+<<>>=
+TukeyHSD(modp7, "Tipo_abono", ordered = TRUE)
+@
+
+Hay diferencias significativas en el crecimiento utilizando los abonos C y D (P-valor = 0.0094), pero no las hay con los abonos A y B (P-valor= 0.064).
+\vspace{0.3cm}
+
+\textbf{Ejercicio Propuesto 8}
+\vspace{0.3cm}
+
+Se realiza un estudio sobre el efecto que produce la descarga de aguas residuales de una planta sobre la ecología del agua natural de un río. En el estudio se utilizaron dos lugares de muestreo. Un lugar está aguas arriba del punto en el que la planta introduce aguas residuales en la corriente; el otro está aguas abajo. Se tomaron muestras durante un periodo de cuatro semanas y se obtuvieron los datos sobre el número de diatomeas halladas. Los datos se muestran en la tabla adjunta:
+
+\begin{table}[H]
+\begin{tabular}{lllllllll}
+\cline{1-5}
+\multicolumn{1}{|l|}{} & \multicolumn{4}{l|}{Semanas} &  &  &  &  \\ \cline{1-5}
+\multicolumn{1}{|l|}{Lugar} & \multicolumn{1}{l|}{Semana 1} & \multicolumn{1}{l|}{Semana 2} & \multicolumn{1}{l|}{Semana 3} & \multicolumn{1}{l|}{Semana 4} &  &  &  &  \\ \cline{1-5}
+\multicolumn{1}{|l|}{\begin{tabular}[c]{@{}l@{}}Aguas\\    \\ Arriba\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}78        94\\    \\ 43        58\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}620       760\\    \\ 420       913\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}204       333\\    \\ 98           89\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}890        655\\    \\ 763        562\end{tabular}} &  &  &  &  \\ \cline{1-5}
+\multicolumn{1}{|l|}{\begin{tabular}[c]{@{}l@{}}Aguas\\    \\ abajo\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}79         87\\    \\ 145       522\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}546       652\\    \\ 76           94\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}45          69\\    \\ 59          62\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}254          86\\    \\ 789         267\end{tabular}} &  &  &  &  \\ \cline{1-5}
+ &  &  &  &  &  &  &  &  \\
+ &  &  &  &  &  &  &  &  \\
+ &  &  &  &  &  &  &  & 
+\end{tabular}
+\end{table}
+
+Responder a las siguientes cuestiones:
+
+\begin{enumerate}
+  \item Identificar el diseño adecuado a este experimento, escribir el modelo matemático y explicar los distintos elementos que intervienen.
+  \item	Estudiar si la semana y el lugar son factores determinantes en el número de diatomeas halladas en el agua del río. ¿Hay posibilidad que una semana sea más recomendable en un lugar del río en concreto y no lo sea en el otro lugar?
+  \item	Estudiar en qué semana se producen menos contaminación en el río, utilizando el método de Duncan.
+  \item	Estudiar en qué lugar del río se producen menos diatomeas.
+\end{enumerate}
+
+	
+Solución:
+Responder a las siguientes cuestiones:
+1. Identificar el diseño adecuado a este experimento, escribir el modelo matemático y explicar los distintos elementos que intervienen.\\
+\\
+Es un diseño factorial dedos factores con replicación, la variable respuesta $y_{ijk}$ viene descrita por la siguiente ecuación\\
+\\
+Modelo estadístico del diseño factorial de dos factores con replicación\\
+
+$$y_{(ijk)}=\mu+\tau_i+\beta_j+(\tau\beta)_{ij}+u_{ijk}   ,i=1,2  ;  j=1,2,3,4;   k=1,2,3,4$$
+\\
+\\
+En este caso lo hacemos en un archivo de texto:
+
+\begin{itemize}
+  \item Variable respuesta: n\_diatomeas
+  \item Factor: semana que tiene cuatro niveles. Es un factor de efectos fijos ya que viene decidido que niveles concretos se van a utilizar.
+  \item	Factor: lugar con dos niveles y de efectos fijos.
+  \item	Tamaño del experimento: Número total de observaciones (32).
+\end{itemize}
+
+<<>>=
+propuesto8<-read.table("propuesto8.txt", header = TRUE)
+propuesto8
+@
+
+A continuación debemos transformar tanto la columna de los tratamiento como la de los bloques en un factor para podemos realizar los cálculos posteriores adecuadamente.
+
+<<>>=
+propuesto8$semana <- factor(propuesto8$semana)
+propuesto8$semana
+@
+
+<<>>=
+propuesto8$lugar <- factor(propuesto8$lugar) 
+propuesto8$lugar
+@
+
+2. Estudiar si la semana y el lugar son factores determinantes en el número de diatomeas halladas en el agua del río. ¿Hay posibilidad que una semana sea más recomendable en un lugar del río en concreto y no lo sea en el otro lugar?\\
+\\
+Primero vamos a obtener la tabla ANOVA
+
+<<>>=
+modp8 <- aov(n_diatomeas ~ semana + lugar + semana * lugar,
+             data = propuesto8)
+modp8
+summary(modp8)
+@
+
+Son significativos los efectos de los dos factores, pero no es significativo la interacción. Ambos son factores determinantes en el número de diatomeas halladas en el agua del río.\\
+\\
+Para determinar si hay algún día de la semana más recomendable que otro, vamos a aplicar un contraste de comparaciones múltiples \\
+\\
+Recordar que hay que cargar e instalar el paquete agricolae
+
+<<>>=
+LSD.test(modp8,"semana", p.adj="bonferroni", console=TRUE)
+@
+
+El número de diatomeas (533.250) es mayor en la semana 4 y menor en la semana 3 (119.875). Hay dos subgrupos diferenciados. Un subgrupo está formado por las semanas 2 y 4 y el otro subgrupo por las semanas 1 y 3.
+
+<<>>=
+SNK.test(modp8,"lugar", console=TRUE)
+@
+
+Se produce menos contaminación en aguas abajo, con un número de diatomeas de 239.50. Y como hemos dicho anteriormente hay diferencias significativas entre el número de diatomeas que se producen en aguas arribas del rio y las que se producen en aguas abajo del rio\\
+\\
+3. Estudiar en qué semana se producen menos contaminación en el río, utilizando el método de Duncan.
+
+<<>>=
+(duncan=duncan.test(modp8, "semana" , group = T))
+@
+
+El número de diatomeas (533.250) es mayor en la semana 4 y menor en la semana 3 (119.875)
+\vspace{0.3cm}
+
+\textbf{Ejercicio Propuesto 9}
+\vspace{0.3cm}
+
+La cotinina es uno de los principales metabolitos de la nicotina. Actualmente se le considera el mejor indicador de la exposición al humo de tabaco. Se ha realizado un estudio con distintas marcas de tabaco distinguiendo principalmente entre negro y rubio para detectar las posibles diferencias en el nivel de nicotina de personas expuestas al humo de tabaco. Para ello, se han analizado personas de distintas edades (niños, jóvenes y adultos) y se ha distinguido entre mujeres y hombres. Se han obtenido los datos de la siguiente tabla sobre el nivel de nicotina en miligramos por mililitro.
+
+\begin{table}[H]
+\begin{tabular}{|l|llll|llll}
+\cline{1-5}
+ & \multicolumn{4}{l|}{Sexo} &  &  &  &  \\ \cline{1-5}
+ & \multicolumn{2}{l|}{Hombres} & \multicolumn{2}{l|}{Mujeres} &  &  &  &  \\ \cline{1-5}
+ & \multicolumn{2}{l|}{Tabaco} & \multicolumn{2}{l|}{Tabaco} &  &  &  &  \\ \cline{1-5}
+Edades & \multicolumn{1}{l|}{Rubio} & \multicolumn{1}{l|}{Negro} & \multicolumn{1}{l|}{Rubio} & Negro &  &  &  &  \\ \cline{1-5}
+Niños & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}110\\    \\ 240\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}360\\    \\ 125\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}230\\    \\ 219\end{tabular}} & \begin{tabular}[c]{@{}l@{}}141\\    \\ 123\end{tabular} &  &  &  &  \\ \cline{1-5}
+Jóvenes & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}112\\    \\ 239\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}252\\    \\ 455\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}655\\    \\ 432\end{tabular}} & \begin{tabular}[c]{@{}l@{}}873\\    \\ 256\end{tabular} &  &  &  &  \\ \cline{1-5}
+Adultos & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}652\\    \\ 451\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}354\\    \\ 701\end{tabular}} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}653\\    \\ 259\end{tabular}} & \begin{tabular}[c]{@{}l@{}}198\\    \\ 343\end{tabular} &  &  &  &  \\ \cline{1-5}
+\end{tabular}
+\end{table}
+
+Responder a las siguientes cuestiones:\\
+
+\begin{itemize}
+  \item Identificar el diseño adecuado a este experimento, escribir el modelo matemático y explicar los distintos elementos que intervienen.
+  \item Contrastar la hipótesis nula de no interacción entre los factores. Adecuar el modelo al resultado de las interacciones y contrastar los efectos principales.
+  \item ¿Hay diferencias significativas en el nivel de nicotina en las distintas edades?¿En qué edad el nivel de nicotina es mayor?
+  \item ¿El tipo de tabaco es un factor determinante en el nivel de nicotina?
+  \item Comparar el nivel medio de nicotina entre las mujeres y los hombres. ¿Se detectan diferencias significativas?
+\end{itemize}
+
+Solución:\\
+\\
+1. Identificar el diseño adecuado a este experimento, escribir el modelo matemático y explicar los distintos elementos que intervienen\\
+\\
+Es un diseño factorial de tres factores con replicación, la variable respuesta $y_{ijkl}$ viene descrita por la siguiente ecuación\\
+\\
+Modelo estadístico del diseño factorial de cuatro factores con replicación\\
+
+$$y_{(ijkl)}=\mu+\tau_i+\beta_j+\gamma_k+(\tau\beta)_{ij}+(\tau\gamma)_{ik}+(\beta\gamma)_{jk}+(\tau\beta\gamma)_{ijk}+u_ijkl   ,i=1,2  ;  j=1,2;   k=1,2,3;  l=1,2$$
+
+\begin{itemize}
+  \item Variable respuesta: Nivel\_nicotina 
+  \item	Factor: sexo que tiene dos niveles. Es un factor de efectos fijos ya que viene decidido que niveles concretos se van a utilizar.
+  \item	Factor: Tabaco con dos niveles y de efectos fijos.
+  \item	Factor: Edades con tres niveles y de efectos fijos.
+  \item	Tamaño del experimento: Número total de observaciones (24).
+\end{itemize}
+
+<<>>=
+propuesto9<-read.table("propuesto9.txt", header = TRUE)
+propuesto9
+@
+
+A continuación debemos transformar tanto la columna de los tratamiento como la de los bloques en un factor para podemos realizar los cálculos posteriores adecuadamente.
+<<>>=
+propuesto9$Sexo <- factor(propuesto9$Sexo)
+propuesto9$Sexo
+@
+
+<<>>=
+propuesto9$Tabaco <- factor(propuesto9$Tabaco)
+propuesto9$Tabaco
+@
+
+<<>>=
+propuesto9$Edades <- factor(propuesto9$Edades)
+propuesto9$Edades
+@
+
+2. Contrastar la hipótesis nula de no interacción entre los factores. Adecuar el modelo al resultado de las interacciones y contrastar los efectos principales.\\
+\\
+Primero vamos a obtener la tabla ANOVA
+
+<<>>=
+modp9 <- aov(Nivel_nicotina ~ Sexo + Tabaco + Edades+ 
+               Sexo * Tabaco + Sexo * Edades + 
+               Tabaco * Edades + Sexo * Tabaco * Edades,
+             data = propuesto9)
+modp9
+summary(modp9)
+@
+
+El único efecto significativo son las distintas edades.
+Al no ser significativa ninguna de las interacciones, realizamos de nuevo el ANOVA sufrimiento la interacción entre los tres factores
+
+<<>>=
+modp91 <- aov(Nivel_nicotina ~ Sexo + Tabaco + 
+                Edades+ Sexo * Tabaco + Sexo * 
+                Edades + Tabaco * Edades, data = propuesto9)
+modp91
+@
+
+De nuevo el único efecto significativo es la Edad. Realizamos de nuevo el ANOVA suprimiendo la interacción de orden 2 Sexo*Tabaco
+
+<<>>=
+modp92 <- aov(Nivel_nicotina ~ Sexo + Tabaco + 
+                Edades+ Sexo * Edades + Tabaco * Edades,
+              data = propuesto9)
+modp92
+@
+
+De nuevo el mismo resultado, suprimimos la iteración Tabaco*Edades
+
+<<>>= 
+modp93 <- aov(Nivel_nicotina ~ Sexo + Tabaco + 
+                Edades+ Sexo * Edades, data = propuesto9)
+modp93
+@
+
+
+Son significativos el efecto de la Edad y el efecto de la interacción del Sexo por la Edad\\
+\\
+3. ¿Hay diferencias significativas en el nivel de nicotina en las distintas edades? ¿En qué edad el nivel de nicotina es mayor?\\
+¿Hay diferencias significativas en el nivel de nicotina en las distintas edades?
+
+<<>>=
+summary(modp9)
+@
+
+Si hay diferencias significativas del nivel de nicotina en las distintas edades (P-valor es 0.0441)\\
+\\
+¿En qué edad el nivel de nicotina es mayor?\\
+\\
+Realizamos un contraste de comparaciones múltiples. Por ejemplo LSD\\
+
+<<>>= 
+library(agricolae)
+LSD.test(modp93,"Edades", p.adj="bonferroni", console=TRUE)
+@
+
+El nivel de nicotina es mayor en los Adultos (451.375 miligramos por mililitro).\\
+\\
+4. ¿El tipo de tabaco es un factor determinante en el nivel de nicotina?
+
+<<>>=
+summary(modp9)
+@
+
+El tipo de tabaco no es determinante en el nivel de nicotina (P-valor = 0.9415)\\
+\\
+5. Comparar el nivel medio de nicotina entre las mujeres y los hombres. ¿Se detectan diferencias significativas?\\
+\\
+No hay diferencias significativas en el nivel de nicotina entre las mujeres y los hombres (P-valor = 0.7328)\\
+\\
+Apliquemos un contraste de comparaciones múltiples para ver donde es mayor
+
+<<>>=
+SNK.test(modp93,"Sexo", console=TRUE)
+@
+
+Las mujeres y los hombres forman un único grupo donde no se aprecian diferencias significativas. Es mayor el nivel de nicotina entre las mujeres (365.1667 miligramos por mililitro)
 \end{document}
 
